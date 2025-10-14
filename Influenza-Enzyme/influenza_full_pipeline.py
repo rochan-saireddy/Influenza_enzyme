@@ -7,7 +7,7 @@ from threading import Thread
 from pyrosetta import init, pose_from_pdb, get_fa_scorefxn
 from pyrosetta.rosetta.protocols.docking import DockMCMProtocol
 from pyrosetta.rosetta.protocols.relax import FastRelax
-from pyrosetta.rosetta.protocols.analysis import Interface
+from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover as Interface
 from pyrosetta.rosetta.core.pose import append_pose_to_pose
 from pyrosetta.teaching import add_variant_type_to_pose_residue
 import matplotlib.pyplot as plt
