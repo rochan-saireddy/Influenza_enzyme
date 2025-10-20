@@ -4,13 +4,20 @@ import json
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Thread
-from pyrosetta import init, pose_from_pdb, get_fa_scorefxn, pose_from_sequence  # <- fixed
+from pyrosetta import init, pose_from_pdb, get_fa_scorefxn, pose_from_sequence
 from pyrosetta.rosetta.protocols.docking import DockMCMProtocol
 from pyrosetta.rosetta.protocols.relax import FastRelax
 from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover as Interface
 from pyrosetta.rosetta.core.pose import append_pose_to_pose
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
+
+# ==========================
+# TEMP FIX: NumPy np.int issue
+# ==========================
+if not hasattr(np, "int"):
+    np.int = int  # OpenFold compatibility for NumPy >=1.24
 
 # === CONFIGURATION ===
 ligandmpnn_path = "../../run.py"
@@ -31,7 +38,6 @@ subtilisin_native_pdb = "Backbones/Subtilisin_Cleaned.pdb"
 init("-mute all")
 
 # === HELPER FUNCTIONS ===
-
 def run_ligandmpnn(input_pdb, out_folder, num_designs, enzyme_chain, antigen_chain):
     os.makedirs(out_folder, exist_ok=True)
     cmd = [
@@ -108,20 +114,17 @@ def plot_and_save_results(base_dir, antigen_name, history):
     df.to_csv(os.path.join(plot_dir, f"{antigen_name}_summary.csv"), index=False)
     print(f"[✓] Saved plot and summary for {antigen_name} in {plot_dir}")
 
-# === HA Fusion Builder (fixed) ===
+# === HA Fusion Builder ===
 def build_fusion_real(darpin_pdb, subtilisin_pdb, linker_seq="GGG", out_pdb="fusion.pdb"):
     fusion_pose = pose_from_pdb(darpin_pdb)
     subtil_pose = pose_from_pdb(subtilisin_pdb)
-
-    # ALWAYS use pose_from_sequence
     linker_pose = pose_from_sequence(linker_seq, "fa_standard")
-
     append_pose_to_pose(fusion_pose, linker_pose, new_chain=False)
     append_pose_to_pose(fusion_pose, subtil_pose, new_chain=False)
-
     fusion_pose.dump_pdb(out_pdb)
     print(f"[+] Fusion created: {out_pdb} (DARPin + linker + Subtilisin)")
     return out_pdb
+
 
 # === M1 Pipeline ===
 def m1_pipeline():
@@ -251,11 +254,19 @@ def consolidate_results(out_dir, antigens_list):
 
 # === MAIN ===
 if __name__ == "__main__":
-    t1 = Thread(target=m1_pipeline)
-    t2 = Thread(target=ha_pipeline)
-    t1.start()
-    t2.start()
-    t1.join()
-    t2.join()
+    # TEMP: keep threads but add option to run sequentially to avoid segfault
+    use_threads = True  # <-- set False to force sequential (safe)
+    if use_threads:
+        t1 = Thread(target=m1_pipeline)
+        t2 = Thread(target=ha_pipeline)
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+    else:
+        m1_pipeline()
+        ha_pipeline()
+
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
+
 
