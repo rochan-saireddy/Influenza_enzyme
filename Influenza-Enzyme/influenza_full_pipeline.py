@@ -7,14 +7,15 @@ from threading import Thread
 from pyrosetta import init, pose_from_pdb, get_fa_scorefxn
 from pyrosetta.rosetta.protocols.docking import DockMCMProtocol
 from pyrosetta.rosetta.protocols.relax import FastRelax
-from pyrosetta.rosetta.protocols.analysis import Interface
+from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover as Interface
 from pyrosetta.rosetta.core.pose import append_pose_to_pose
+from pyrosetta.rosetta.core.pose import make_pose_from_sequence
 from pyrosetta.rosetta.core.pose import add_variant_type_to_pose_residue
 import matplotlib.pyplot as plt
 import pandas as pd
 
 # === CONFIGURATION ===
-ligandmpnn_path = "LigandMPNN/protein_mpnn_run.py"
+ligandmpnn_path = "../protein_mpnn_run.py"
 base_dir = "Results"
 num_designs = 20
 max_rounds = 10
@@ -115,8 +116,8 @@ def build_fusion_real(darpin_pdb, subtilisin_pdb, linker_seq="GGG", out_pdb="fus
     fusion_pose = pose_from_pdb(darpin_pdb)
     subtil_pose = pose_from_pdb(subtilisin_pdb)
     linker_pose = Pose()
-    for aa in linker_seq:
-        linker_pose.append_residue_by_jump(aa, fusion_pose.total_residue())
+    linker_pose = make_pose_from_sequence(linker_seq, "fa_standard")
+    fusion_pose.append_pose_by_jump(linker_pose, fusion_pose.total_residue())
     append_pose_to_pose(fusion_pose, linker_pose, new_chain=False)
     append_pose_to_pose(fusion_pose, subtil_pose, new_chain=False)
     fusion_pose.dump_pdb(out_pdb)
