@@ -221,7 +221,18 @@ def consolidate_results(out_dir, antigens_list):
             with open(history_file, "r") as f: 
                 history = json.load(f) 
                 for entry in history: 
-                    round_num = entry["round"] for rank, d in enumerate(entry["top_designs"], start=1):
+                    for rank, d in enumerate(entry["top_designs"], start=1):
+                        round_num = entry["round"]
+                        df_master.loc[len(df_master)] = [
+        antigen_name,
+        rank,
+        d["ΔG_bind"],
+        d["complex"],
+        d["enzyme"],
+        d["antigen"],
+        round_num,
+    ]
+
                         master_rows.append({
                             "Antigen": antigen_name, 
                             "Round": round_num, 
@@ -263,3 +274,4 @@ if __name__ == "__main__":
     t1.join()
     t2.join()
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
+
