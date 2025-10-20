@@ -4,12 +4,11 @@ import json
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Thread
-from pyrosetta import init, pose_from_pdb, get_fa_scorefxn
+from pyrosetta import init, pose_from_pdb, get_fa_scorefxn, pose_from_sequence
 from pyrosetta.rosetta.protocols.docking import DockMCMProtocol
 from pyrosetta.rosetta.protocols.relax import FastRelax
 from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover as Interface
-from pyrosetta.rosetta.core.pose import append_pose_to_pose, make_pose_from_sequence
-from pyrosetta.rosetta.core.pose import add_variant_type_to_pose_residue
+from pyrosetta.rosetta.core.pose import append_pose_to_pose
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -109,15 +108,12 @@ def plot_and_save_results(base_dir, antigen_name, history):
     df.to_csv(os.path.join(plot_dir, f"{antigen_name}_summary.csv"), index=False)
     print(f"[✓] Saved plot and summary for {antigen_name} in {plot_dir}")
 
-# === HA Fusion Builder (fixed imports) ===
+# === HA Fusion Builder (fixed) ===
 def build_fusion_real(darpin_pdb, subtilisin_pdb, linker_seq="GGG", out_pdb="fusion.pdb"):
-    from pyrosetta import Pose, make_pose_from_sequence
-    from pyrosetta.rosetta.core.pose import append_pose_to_pose
-
     fusion_pose = pose_from_pdb(darpin_pdb)
     subtil_pose = pose_from_pdb(subtilisin_pdb)
 
-    linker_pose = make_pose_from_sequence(linker_seq, "fa_standard")
+    linker_pose = pose_from_sequence(linker_seq, "fa_standard")
     append_pose_to_pose(fusion_pose, linker_pose, new_chain=False)
     append_pose_to_pose(fusion_pose, subtil_pose, new_chain=False)
 
@@ -209,64 +205,50 @@ def ha_pipeline():
     print("\n=== HA PIPELINE COMPLETE ===")
     return history
 
-
-# === Consolidated results === 
-# === Consolidated results + master ΔG plot === 
-def consolidate_results(out_dir, antigens_list): 
-    master_rows = [] 
-    for antigen_name in antigens_list: 
-    # Load design history JSON if exists 
+# === Consolidated results ===
+def consolidate_results(out_dir, antigens_list):
+    master_rows = []
+    for antigen_name in antigens_list:
         history_file = os.path.join(out_dir, antigen_name, "design_history.json")
         if os.path.exists(history_file):
-            with open(history_file, "r") as f: 
-                history = json.load(f) 
-                for entry in history: 
-                    for rank, d in enumerate(entry["top_designs"], start=1):
-                        round_num = entry["round"]
-                        df_master.loc[len(df_master)] = [
-        antigen_name,
-        rank,
-        d["ΔG_bind"],
-        d["complex"],
-        d["enzyme"],
-        d["antigen"],
-        round_num,
-    ]
+            with open(history_file, "r") as f:
+                history = json.load(f)
+            for entry in history:
+                round_num = entry["round"]
+                for rank, d in enumerate(entry["top_designs"], start=1):
+                    master_rows.append({
+                        "Antigen": antigen_name,
+                        "Round": round_num,
+                        "Rank": rank,
+                        "ΔG": d["ΔG"],
+                        "PDB": d["pdb"]
+                    })
 
-                        master_rows.append({
-                            "Antigen": antigen_name, 
-                            "Round": round_num, 
-                            "Rank": rank, 
-                            "ΔG": d["ΔG"], 
-                            "PDB": d["pdb"] }) 
-                        
-    df_master = pd.DataFrame(master_rows) 
-    master_csv = os.path.join(out_dir, "master_top_designs.csv") 
-    df_master.to_csv(master_csv, index=False) 
-    print(f"[✓] Master CSV saved: {master_csv}") 
-    # Master ΔG plot (top 1 per round) 
-    plt.figure() 
-    for antigen_name in antigens_list: 
-        df_sub = df_master[(df_master["Antigen"] == antigen_name) & (df_master["Rank"] == 1)] 
-        if df_sub.empty: 
-            continue 
+    df_master = pd.DataFrame(master_rows)
+    master_csv = os.path.join(out_dir, "master_top_designs.csv")
+    df_master.to_csv(master_csv, index=False)
+    print(f"[✓] Master CSV saved: {master_csv}")
+
+    plt.figure()
+    for antigen_name in antigens_list:
+        df_sub = df_master[(df_master["Antigen"] == antigen_name) & (df_master["Rank"] == 1)]
+        if df_sub.empty:
+            continue
         rounds = df_sub["Round"].tolist()
         top1_dG = df_sub["ΔG"].tolist()
         plt.plot(rounds, top1_dG, "-o", label=f"{antigen_name} Top1 ΔG")
-        
     plt.xlabel("Round")
     plt.ylabel("Interface ΔG (kcal/mol)")
-    plt.title("Top ΔG per Round: M1 vs HA") 
-    plt.legend() 
-    plt.grid(True) 
-    plot_path = os.path.join(out_dir, "master_top1_ΔG_plot.png") 
-    plt.savefig(plot_path) 
-    plt.close() 
+    plt.title("Top ΔG per Round: M1 vs HA")
+    plt.legend()
+    plt.grid(True)
+    plot_path = os.path.join(out_dir, "master_top1_ΔG_plot.png")
+    plt.savefig(plot_path)
+    plt.close()
     print(f"[✓] Master ΔG plot saved: {plot_path}")
 
 # === MAIN ===
 if __name__ == "__main__":
-    # Make sure torch is installed: pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
     t1 = Thread(target=m1_pipeline)
     t2 = Thread(target=ha_pipeline)
     t1.start()
@@ -274,4 +256,3 @@ if __name__ == "__main__":
     t1.join()
     t2.join()
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
-
