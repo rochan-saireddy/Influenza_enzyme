@@ -8,13 +8,13 @@ from pyrosetta import init, pose_from_pdb, get_fa_scorefxn
 from pyrosetta.rosetta.protocols.docking import DockMCMProtocol
 from pyrosetta.rosetta.protocols.relax import FastRelax
 from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover as Interface
-from pyrosetta.rosetta.core.pose import append_pose_to_pose
+from pyrosetta.rosetta.core.pose import append_pose_to_pose, make_pose_from_sequence
 from pyrosetta.rosetta.core.pose import add_variant_type_to_pose_residue
 import matplotlib.pyplot as plt
 import pandas as pd
 
 # === CONFIGURATION ===
-ligandmpnn_path = "../protein_mpnn_run.py"
+ligandmpnn_path = "../../protein_mpnn_run.py"
 base_dir = "Results"
 num_designs = 20
 max_rounds = 10
@@ -263,4 +263,5 @@ if __name__ == "__main__":
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
 
     consolidate_results(base_dir, ["M1", "HA"])
+
 
