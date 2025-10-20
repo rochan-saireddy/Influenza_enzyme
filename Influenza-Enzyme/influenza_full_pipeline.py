@@ -13,12 +13,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-# ==========================
-# TEMP FIX: NumPy np.int issue
-# ==========================
-if not hasattr(np, "int"):
-    np.int = int  # OpenFold compatibility for NumPy >=1.24
-
 # === CONFIGURATION ===
 ligandmpnn_path = "../../run.py"
 base_dir = "Results"
@@ -268,6 +262,7 @@ if __name__ == "__main__":
         ha_pipeline()
 
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
+
 
 
 
