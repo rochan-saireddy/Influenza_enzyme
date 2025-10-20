@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # === CONFIGURATION ===
-ligandmpnn_path = "../../protein_mpnn_run.py"
+ligandmpnn_path = "../../run.py"
 base_dir = "Results"
 num_designs = 20
 max_rounds = 10
@@ -111,13 +111,15 @@ def plot_and_save_results(base_dir, antigen_name, history):
 
 # === HA Fusion Builder ===
 def build_fusion_real(darpin_pdb, subtilisin_pdb, linker_seq="GGG", out_pdb="fusion.pdb"):
-    from pyrosetta import Pose, pose_from_pdb
     fusion_pose = pose_from_pdb(darpin_pdb)
     subtil_pose = pose_from_pdb(subtilisin_pdb)
+
     linker_pose = Pose()
-    linker_pose = make_pose_from_sequence(linker_seq, "fa_standard")
+    make_pose_from_sequence(linker_pose, linker_seq, "fa_standard")
+
     append_pose_to_pose(fusion_pose, linker_pose, new_chain=False)
     append_pose_to_pose(fusion_pose, subtil_pose, new_chain=False)
+
     fusion_pose.dump_pdb(out_pdb)
     print(f"[+] Fusion created: {out_pdb} (DARPin + linker + Subtilisin)")
     return out_pdb
@@ -263,5 +265,6 @@ if __name__ == "__main__":
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
 
     consolidate_results(base_dir, ["M1", "HA"])
+
 
 
