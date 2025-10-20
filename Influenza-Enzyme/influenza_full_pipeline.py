@@ -255,7 +255,7 @@ def consolidate_results(out_dir, antigens_list):
 # === MAIN ===
 if __name__ == "__main__":
     # TEMP: keep threads but add option to run sequentially to avoid segfault
-    use_threads = True  # <-- set False to force sequential (safe)
+    use_threads = False  # <-- set True to allow concurrent
     if use_threads:
         t1 = Thread(target=m1_pipeline)
         t2 = Thread(target=ha_pipeline)
@@ -268,5 +268,6 @@ if __name__ == "__main__":
         ha_pipeline()
 
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
+
 
 
