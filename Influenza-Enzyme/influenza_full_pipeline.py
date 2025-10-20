@@ -1,3 +1,8 @@
+# TEMP: fix for np.int removed in NumPy >=1.24
+import numpy as np
+if not hasattr(np, "int"):
+    np.int = int
+
 import os
 import subprocess
 import json
@@ -11,7 +16,6 @@ from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover as Inter
 from pyrosetta.rosetta.core.pose import append_pose_to_pose
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 
 # === CONFIGURATION ===
 ligandmpnn_path = "../../run.py"
@@ -262,6 +266,7 @@ if __name__ == "__main__":
         ha_pipeline()
 
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
+
 
 
 
