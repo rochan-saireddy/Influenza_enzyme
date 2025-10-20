@@ -4,7 +4,7 @@ import json
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Thread
-from pyrosetta import init, pose_from_pdb, get_fa_scorefxn, pose_from_sequence
+from pyrosetta import init, pose_from_pdb, get_fa_scorefxn, pose_from_sequence  # <- fixed
 from pyrosetta.rosetta.protocols.docking import DockMCMProtocol
 from pyrosetta.rosetta.protocols.relax import FastRelax
 from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover as Interface
@@ -113,7 +113,9 @@ def build_fusion_real(darpin_pdb, subtilisin_pdb, linker_seq="GGG", out_pdb="fus
     fusion_pose = pose_from_pdb(darpin_pdb)
     subtil_pose = pose_from_pdb(subtilisin_pdb)
 
+    # ALWAYS use pose_from_sequence
     linker_pose = pose_from_sequence(linker_seq, "fa_standard")
+
     append_pose_to_pose(fusion_pose, linker_pose, new_chain=False)
     append_pose_to_pose(fusion_pose, subtil_pose, new_chain=False)
 
@@ -256,3 +258,4 @@ if __name__ == "__main__":
     t1.join()
     t2.join()
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
+
