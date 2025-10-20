@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # === CONFIGURATION ===
-ligandmpnn_path = "LigandMPNN/protein_mpnn_run.py"
+ligandmpnn_path = "../protein_mpnn_run.py"
 base_dir = "Results"
 num_designs = 20
 max_rounds = 10
@@ -115,8 +115,7 @@ def build_fusion_real(darpin_pdb, subtilisin_pdb, linker_seq="GGG", out_pdb="fus
     fusion_pose = pose_from_pdb(darpin_pdb)
     subtil_pose = pose_from_pdb(subtilisin_pdb)
     linker_pose = Pose()
-    for aa in linker_seq:
-        linker_pose.append_residue_by_jump(aa, fusion_pose.total_residue())
+    linker_pose = make_pose_from_sequence(linker_seq, "fa_standard")
     append_pose_to_pose(fusion_pose, linker_pose, new_chain=False)
     append_pose_to_pose(fusion_pose, subtil_pose, new_chain=False)
     fusion_pose.dump_pdb(out_pdb)
@@ -264,3 +263,4 @@ if __name__ == "__main__":
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
 
     consolidate_results(base_dir, ["M1", "HA"])
+
