@@ -43,13 +43,17 @@ def run_ligandmpnn(input_pdb, out_folder, num_designs, enzyme_chain, antigen_cha
         "--pdb_path", input_pdb,
         "--out_folder", out_folder,
         "--chains_to_design", enzyme_chain,
-        "--fixed_residues", antigen_chain,   # <-- change this line
+        "--fixed_residues", antigen_chain,
         "--number_of_batches", str(num_designs),
         "--batch_size", "20",
-        "--model_type", "protein_mpnn"
+        "--model_type", "ligand_mpnn",          # <--- use ligand-aware model
+        "--ligand_mpnn_use_atom_context", "1",
+        "--ligand_mpnn_cutoff_for_score", "8.0",
+        "--force_hetatm", "1"
     ]
     subprocess.run(cmd, check=True)
-    print(f"[+] ProteinMPNN redesign done for {input_pdb}")
+    print(f"[+] LigandMPNN redesign done for {input_pdb}")
+
 
 
 def redock_and_score(pdb_file, enzyme_chain, antigen_chain):
@@ -269,6 +273,7 @@ if __name__ == "__main__":
         ha_pipeline()
 
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
+
 
 
 
