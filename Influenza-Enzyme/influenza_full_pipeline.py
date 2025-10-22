@@ -38,16 +38,17 @@ init("-mute all")
 # === HELPER FUNCTIONS ===
 def run_ligandmpnn(input_pdb, out_folder, num_designs, enzyme_chain, antigen_chain):
     os.makedirs(out_folder, exist_ok=True)
-    cmd = [
-       "python3", ligandmpnn_path,
+   cmd = [
+    "python3", ligandmpnn_path,
     "--pdb_path", input_pdb,
     "--out_folder", out_folder,
-    "--design_chain_list", enzyme_chain,   # chain to redesign (enzyme)
-    "--ligand_chain_list", antigen_chain,  # ligand/antigen to keep fixed
+    "--chains_to_design", enzyme_chain,   # the chain you want to redesign
+    "--fixed_residues", antigen_chain,    # chain to keep fixed
     "--number_of_batches", str(num_designs),
     "--batch_size", "20",
     "--model_type", "ligand_mpnn"
 ]
+
 
     subprocess.run(cmd, check=True)
     print(f"[+] LigandMPNN done for {input_pdb}")
@@ -270,6 +271,7 @@ if __name__ == "__main__":
         ha_pipeline()
 
     print("\n=== ALL DESIGN PIPELINES COMPLETE ===")
+
 
 
 
